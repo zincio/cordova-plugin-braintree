@@ -31,6 +31,7 @@
         <source-file src="src/android/BraintreePlugin.java" target-dir="src/net/justincredible" />
 
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
+        <framework src="com.google.android.gms:play-services-wallet:+" />
 
     </platform>
 

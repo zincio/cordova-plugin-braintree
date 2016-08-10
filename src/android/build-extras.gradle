@@ -10,6 +10,7 @@ android {
 dependencies {
     compile 'com.braintreepayments.api:braintree:2.1.2'
     compile 'com.braintreepayments.api:drop-in:2.1.2'
+    compile 'com.google.android.gms:play-services-wallet:+'
 }
 
 def getPackageName() {

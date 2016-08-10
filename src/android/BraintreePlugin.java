@@ -9,6 +9,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.android.gms.wallet.Cart;
+import com.google.android.gms.wallet.LineItem;
+
 import com.braintreepayments.api.BraintreePaymentActivity;
 import com.braintreepayments.api.PaymentRequest;
 import com.braintreepayments.api.models.CardNonce;
@@ -149,6 +152,22 @@ public final class BraintreePlugin extends CordovaPlugin {
         paymentRequest.amount(amount);
         paymentRequest.primaryDescription(primaryDescription);
         paymentRequest.secondaryDescription(secondaryDescription);
+
+        // Android Pay!!
+        String safeAmount = amount.replace("$", "").replace(",", "");
+        Cart cart = Cart.newBuilder()
+            .setCurrencyCode("USD")
+            .setTotalPrice(safeAmount)
+            .addLineItem(LineItem.newBuilder()
+                .setCurrencyCode("USD")
+                .setDescription("Item Description")
+                .setQuantity("1")
+                .setUnitPrice(safeAmount)
+                .setTotalPrice(safeAmount)
+                .build())
+            .build();
+
+        paymentRequest.androidPayCart(cart);
 
         this.cordova.setActivityResultCallback(this);
         this.cordova.startActivityForResult(this, paymentRequest.getIntent(this.cordova.getActivity()), DROP_IN_REQUEST);
