@@ -80,4 +80,50 @@ BraintreePlugin.presentDropInPaymentUI = function showDropInUI(options, successC
     exec(successCallback, failureCallback, PLUGIN_ID, "presentDropInPaymentUI", pluginOptions);
 };
 
+BraintreePlugin.canMakeApplePayments = function canMakeApplePayments(successCallback, errorCallback) {
+    if(cordova.platformId !== "ios"){
+        errorCallback('Only iOS can use apple pay')
+    }
+    exec(successCallback, failureCallback, PLUGIN_ID, "canMakeApplePayments");
+};
+
+BraintreePlugin.presentApplePayUI = function presentApplePayUI(options, successCallback, failureCallback) {
+    if(cordova.platformId !== "ios"){
+        errorCallback('Only iOS can use apple pay');
+    }
+    if(!options.merchantIdentifier || typeof(options.merchantIdentifier) !== 'string'){
+        errorCallback('invalid merchantIdentifier');
+    }
+    options.countryCode = options.countryCode || 'US';
+    if(typeof(options.countryCode) !== 'string'){
+        errorCallback('invalid countryCode');
+    }
+    options.currencyCode = options.currencyCode || 'USD';
+    if(typeof(options.currencyCode) !== 'string'){
+        errorCallback('invalid currencyCode');
+    }
+    if(typeof(options.itemName) !== 'string'){
+        errorCallback('invalid itemName');
+    }
+    if(typeof(options.price) !== 'string'){
+        errorCallback('invalid price');
+    }
+    if(typeof(options.companyName) !== 'string'){
+        errorCallback('invalid companyName');
+    }
+    if(typeof(options.grandTotal) !== 'string'){
+        errorCallback('invalid grandTotal');
+    }
+    var pluginOptions = [
+        options.merchantIdentifier,
+        options.countryCode,
+        options.currencyCode,
+        options.itemName,
+        options.price,
+        options.companyName,
+        options.grandTotal
+    ];
+    exec(successCallback, failureCallback, PLUGIN_ID, "presentApplePayUI", pluginOptions);
+};
+
 module.exports = BraintreePlugin;

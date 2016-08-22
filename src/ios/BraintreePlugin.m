@@ -16,7 +16,7 @@
 #import <Braintree3DSecure/Braintree3DSecure.h>
 #import <BraintreeVenmo/BraintreeVenmo.h>
 
-@interface BraintreePlugin() <BTDropInViewControllerDelegate>
+@interface BraintreePlugin() <BTDropInViewControllerDelegate, PKPaymentAuthorizationViewControllerDelegate>
 
 @property (nonatomic, strong) BTAPIClient *braintreeClient;
 
@@ -56,6 +56,109 @@ NSString *dropInUIcallbackId;
 
     CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
+}
+
+- (void)paymentAuthorizationViewController:(PKPaymentAuthorizationViewController *)controller didAuthorizePayment:(PKPayment *)payment completion:(void (^)(PKPaymentAuthorizationStatus))completion {
+    BTApplePayClient *applePayClient = [[BTApplePayClient alloc] initWithAPIClient:self.braintreeClient];
+    [applePayClient tokenizeApplePayPayment:payment
+                                 completion:^(BTApplePayCardNonce *tokenizedApplePayPayment,
+                                              NSError *error) {
+                                     if (tokenizedApplePayPayment) {
+                                         // On success, send nonce to your server for processing.
+                                         // If applicable, address information is accessible in `payment`.
+                                         if (dropInUIcallbackId) {
+                                             NSDictionary *dictionary = [self getPaymentUINonceResult:tokenizedApplePayPayment];
+                                             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dictionary];
+                                             [self.commandDelegate sendPluginResult:pluginResult callbackId:dropInUIcallbackId];
+                                             dropInUIcallbackId = nil;
+                                         }
+                                         // Then indicate success or failure via the completion callback, e.g.
+                                         completion(PKPaymentAuthorizationStatusSuccess);
+                                     } else {
+                                         // Tokenization failed. Check `error` for the cause of the failure.
+                                         if (dropInUIcallbackId) {
+                                             NSLog(@"%@",[error localizedDescription]);
+                                             NSDictionary *dictionary = @{ @"userCancelled": @YES };
+                                             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                                                           messageAsDictionary:dictionary];
+                                             [self.commandDelegate sendPluginResult:pluginResult callbackId:dropInUIcallbackId];
+                                             dropInUIcallbackId = nil;
+                                         }
+                                         // Indicate failure via the completion callback:
+                                         completion(PKPaymentAuthorizationStatusFailure);
+                                     }
+                                 }];
+}
+
+- (void)paymentAuthorizationViewControllerDidFinish:(PKPaymentAuthorizationViewController *)controller{
+    [self.viewController dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)canMakeApplePayments:(CDVInvokedUrlCommand*)command
+{
+    if ([PKPaymentAuthorizationViewController canMakePayments]) {
+        if ((floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_0)) {
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device cannot make payments."];
+            [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            return;
+        } else if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){9, 0, 0}]) {
+            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:supportedPaymentNetworks capabilities:(merchantCapabilities)]) {
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments and has a supported card"];
+                [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                return;
+            } else {
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device can make payments but has no supported cards"];
+                [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                return;
+            }
+        } else if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){8, 0, 0}]) {
+            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:supportedPaymentNetworks]) {
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments and has a supported card"];
+                [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                return;
+            } else {
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device can make payments but has no supported cards"];
+                [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                return;
+            }
+        } else {
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device cannot make payments."];
+            [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            return;
+        }
+    } else {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device cannot make payments."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+}
+
+- (void)presentApplePayUI:(CDVInvokedUrlCommand *) command {
+    // Ensure the client has been initialized.
+    if (!self.braintreeClient) {
+        CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"The Braintree client must first be initialized via BraintreePlugin.initialize(token)"];
+        [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
+        return;
+    }
+    // Save off the Cordova callback ID so it can be used in the completion handlers.
+    dropInUIcallbackId = command.callbackId;
+    //create payment request
+    PKPaymentRequest *paymentRequest = [[PKPaymentRequest alloc] init];
+    paymentRequest.merchantIdentifier = [command.arguments objectAtIndex:0];
+    paymentRequest.supportedNetworks = @[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard];
+    paymentRequest.merchantCapabilities = PKMerchantCapability3DS;
+    paymentRequest.countryCode = [command.arguments objectAtIndex:1];
+    paymentRequest.currencyCode = [command.arguments objectAtIndex:2];
+    paymentRequest.paymentSummaryItems =
+    @[
+      [PKPaymentSummaryItem summaryItemWithLabel:[command.arguments objectAtIndex:3] amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:4]]], //ITEM_NAME & PRICE
+      // Add add'l payment summary items...
+      [PKPaymentSummaryItem summaryItemWithLabel:[command.arguments objectAtIndex:5] amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:6]]] //COMPANY_NAME & GRAND_TOTAL
+    ];
+    //preset the UI
+    PKPaymentAuthorizationViewController *vc = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
+    vc.delegate = self;
+    [self.viewController presentViewController:vc animated:YES completion:nil];
 }
 
 - (void)presentDropInPaymentUI:(CDVInvokedUrlCommand *)command {
@@ -341,4 +444,3 @@ NSString *dropInUIcallbackId;
 }
 
 @end
-
