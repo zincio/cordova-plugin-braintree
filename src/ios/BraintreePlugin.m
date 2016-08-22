@@ -102,7 +102,7 @@ NSString *dropInUIcallbackId;
             [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
             return;
         } else if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){9, 0, 0}]) {
-            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:supportedPaymentNetworks capabilities:(merchantCapabilities)]) {
+            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard] capabilities:PKMerchantCapability3DS]) {
                 CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments and has a supported card"];
                 [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
                 return;
@@ -112,7 +112,7 @@ NSString *dropInUIcallbackId;
                 return;
             }
         } else if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){8, 0, 0}]) {
-            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:supportedPaymentNetworks]) {
+            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard]]) {
                 CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments and has a supported card"];
                 [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
                 return;
