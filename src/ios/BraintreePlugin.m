@@ -102,15 +102,15 @@ NSString *dropInUIcallbackId;
             [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
             return;
         } else if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){9, 0, 0}]) {
-            if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard] capabilities:PKMerchantCapability3DS]) {
-                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments and has a supported card"];
+            //if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard] capabilities:PKMerchantCapability3DS]) {
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments"];
                 [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
                 return;
-            } else {
-                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device can make payments but has no supported cards"];
-                [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
-                return;
-            }
+            //} else {
+            //    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString: @"This device can make payments but has no supported cards"];
+            //    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            //    return;
+            //}
         } else if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){8, 0, 0}]) {
             if ([PKPaymentAuthorizationViewController canMakePaymentsUsingNetworks:@[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard]]) {
                 CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: @"This device can make payments and has a supported card"];
