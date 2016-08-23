@@ -108,20 +108,12 @@ BraintreePlugin.presentApplePayUI = function presentApplePayUI(options, successC
     if(typeof(options.price) !== 'string'){
         errorCallback('invalid price');
     }
-    if(typeof(options.companyName) !== 'string'){
-        errorCallback('invalid companyName');
-    }
-    if(typeof(options.grandTotal) !== 'string'){
-        errorCallback('invalid grandTotal');
-    }
     var pluginOptions = [
         options.merchantIdentifier,
         options.countryCode,
         options.currencyCode,
         options.itemName,
         options.price,
-        options.companyName,
-        options.grandTotal
     ];
     exec(successCallback, failureCallback, PLUGIN_ID, "presentApplePayUI", pluginOptions);
 };

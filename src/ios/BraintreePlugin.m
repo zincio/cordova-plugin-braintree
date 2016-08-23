@@ -147,18 +147,21 @@ NSString *dropInUIcallbackId;
     paymentRequest.merchantIdentifier = [command.arguments objectAtIndex:0];
     paymentRequest.supportedNetworks = @[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard];
     paymentRequest.merchantCapabilities = PKMerchantCapability3DS;
+    paymentRequest.requiredBillingAddressFields = PKAddressFieldEmail;
     paymentRequest.countryCode = [command.arguments objectAtIndex:1];
     paymentRequest.currencyCode = [command.arguments objectAtIndex:2];
     paymentRequest.paymentSummaryItems =
     @[
-      [PKPaymentSummaryItem summaryItemWithLabel:[command.arguments objectAtIndex:3] amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:4]]], //ITEM_NAME & PRICE
-      // Add add'l payment summary items...
-      [PKPaymentSummaryItem summaryItemWithLabel:[command.arguments objectAtIndex:5] amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:6]]] //COMPANY_NAME & GRAND_TOTAL
+       [PKPaymentSummaryItem summaryItemWithLabel:@"Subtotal" amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:4]]]
     ];
     //preset the UI
     PKPaymentAuthorizationViewController *vc = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
-    vc.delegate = self;
-    [self.viewController presentViewController:vc animated:YES completion:nil];
+    if(vc){
+        vc.delegate = self;
+        [self.viewController presentViewController:vc animated:YES completion:nil];
+    } else {
+        NSLog(@"PKPaymentAuthorizationViewController is nil");
+    }
 }
 
 - (void)presentDropInPaymentUI:(CDVInvokedUrlCommand *)command {
