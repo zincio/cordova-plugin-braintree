@@ -152,7 +152,7 @@ NSString *dropInUIcallbackId;
     paymentRequest.currencyCode = [command.arguments objectAtIndex:2];
     paymentRequest.paymentSummaryItems =
     @[
-       [PKPaymentSummaryItem summaryItemWithLabel:@"Subtotal" amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:4]]]
+       [PKPaymentSummaryItem summaryItemWithLabel:@"Subtotal App" amount:[NSDecimalNumber decimalNumberWithString:[command.arguments objectAtIndex:4]]]
     ];
     //preset the UI
     PKPaymentAuthorizationViewController *vc = [[PKPaymentAuthorizationViewController alloc] initWithPaymentRequest:paymentRequest];
@@ -199,7 +199,7 @@ NSString *dropInUIcallbackId;
     }
 
     NSString* ctaText = [command.arguments objectAtIndex:2];
-    
+
     if (!ctaText) {
         CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"ctaText is required."];
         [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
@@ -207,7 +207,7 @@ NSString *dropInUIcallbackId;
     }
 
     NSString* amount = [command.arguments objectAtIndex:3];
-    
+
     if (!amount) {
         CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"amount is required."];
         [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
@@ -215,7 +215,7 @@ NSString *dropInUIcallbackId;
     }
 
     NSString* primaryDescription = [command.arguments objectAtIndex:4];
-    
+
     if (!primaryDescription) {
         CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"primaryDescription is required."];
         [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
@@ -223,13 +223,13 @@ NSString *dropInUIcallbackId;
     }
 
     NSString* secondaryDescription = [command.arguments objectAtIndex:5];
-    
+
     if (!secondaryDescription) {
         CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"secondaryDescription is required."];
         [self.commandDelegate sendPluginResult:res callbackId:command.callbackId];
         return;
     }
-    
+
     // Save off the Cordova callback ID so it can be used in the completion handlers.
     dropInUIcallbackId = command.callbackId;
 
@@ -251,7 +251,7 @@ NSString *dropInUIcallbackId;
     dropInViewController.paymentRequest.displayAmount = [amount isEqualToString:@""] ? nil :  amount;
     dropInViewController.paymentRequest.summaryTitle = [primaryDescription isEqualToString:@""] ? nil : primaryDescription;
     dropInViewController.paymentRequest.summaryDescription = [secondaryDescription isEqualToString:@""] ? nil : secondaryDescription;
-    
+
     // Setup the dialog's title.
     dropInViewController.title = title;
 
