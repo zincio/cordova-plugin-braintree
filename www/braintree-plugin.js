@@ -82,7 +82,7 @@ BraintreePlugin.presentDropInPaymentUI = function showDropInUI(options, successC
 
 BraintreePlugin.canMakeApplePayments = function canMakeApplePayments(successCallback, failureCallback) {
     if(cordova.platformId !== "ios"){
-        errorCallback('Only iOS can use apple pay')
+        failureCallback('Only iOS can use apple pay')
     }
     exec(successCallback, failureCallback, PLUGIN_ID, "canMakeApplePayments");
 };
