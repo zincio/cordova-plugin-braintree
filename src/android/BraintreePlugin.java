@@ -149,6 +149,7 @@ public final class BraintreePlugin extends CordovaPlugin {
         paymentRequest.amount(amount);
         paymentRequest.primaryDescription(primaryDescription);
         paymentRequest.secondaryDescription(secondaryDescription);
+        paymentRequest.collectDeviceData(true);
 
         this.cordova.setActivityResultCallback(this);
         this.cordova.startActivityForResult(this, paymentRequest.getIntent(this.cordova.getActivity()), DROP_IN_REQUEST);
@@ -167,12 +168,14 @@ public final class BraintreePlugin extends CordovaPlugin {
         if (requestCode == DROP_IN_REQUEST) {
 
             PaymentMethodNonce paymentMethodNonce = null;
+            String deviceData = null;
 
             if (resultCode == Activity.RESULT_OK) {
                 paymentMethodNonce = intent.getParcelableExtra(BraintreePaymentActivity.EXTRA_PAYMENT_METHOD_NONCE);
+                deviceData = intent.getStringExtra(BraintreePaymentActivity.EXTRA_DEVICE_DATA);
             }
 
-            this.handleDropInPaymentUiResult(resultCode, paymentMethodNonce);
+            this.handleDropInPaymentUiResult(resultCode, paymentMethodNonce, deviceData);
         }
         else if (requestCode == PAYMENT_BUTTON_REQUEST) {
             //TODO
@@ -194,7 +197,7 @@ public final class BraintreePlugin extends CordovaPlugin {
      * @param resultCode Indicates the result of the UI.
      * @param paymentMethodNonce Contains information about a successful payment.
      */
-    private void handleDropInPaymentUiResult(int resultCode, PaymentMethodNonce paymentMethodNonce) {
+    private void handleDropInPaymentUiResult(int resultCode, PaymentMethodNonce paymentMethodNonce, String deviceData) {
 
         if (dropInUICallbackContext == null) {
             return;
@@ -215,6 +218,7 @@ public final class BraintreePlugin extends CordovaPlugin {
         }
 
         Map<String, Object> resultMap = this.getPaymentUINonceResult(paymentMethodNonce);
+        resultMap.put("deviceData", deviceData);
         dropInUICallbackContext.success(new JSONObject(resultMap));
         dropInUICallbackContext = null;
     }
