@@ -15,10 +15,14 @@
 #import <BraintreeApplePay/BraintreeApplePay.h>
 #import <Braintree3DSecure/Braintree3DSecure.h>
 #import <BraintreeVenmo/BraintreeVenmo.h>
+#import <BraintreeDataCollector/BraintreeDataCollector.h>
 
 @interface BraintreePlugin() <BTDropInViewControllerDelegate, PKPaymentAuthorizationViewControllerDelegate>
 
 @property (nonatomic, strong) BTAPIClient *braintreeClient;
+
+// Retain your `BTDataCollector` instance for your entire application lifecycle.
+@property (nonatomic, strong) BTDataCollector *dataCollector;
 
 @end
 
@@ -27,6 +31,7 @@
 NSString *dropInUIcallbackId;
 
 #pragma mark - Cordova commands
+
 
 - (void)initialize:(CDVInvokedUrlCommand *)command {
 
@@ -47,6 +52,8 @@ NSString *dropInUIcallbackId;
     }
 
     self.braintreeClient = [[BTAPIClient alloc] initWithAuthorization:token];
+    self.dataCollector = [[BTDataCollector alloc] initWithEnvironment:BTDataCollectorEnvironmentProduction];
+
 
     if (!self.braintreeClient) {
         CDVPluginResult *res = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"The Braintree client failed to initialize."];
@@ -289,9 +296,14 @@ NSString *dropInUIcallbackId;
     if (dropInUIcallbackId) {
 
         NSDictionary *dictionary = [self getPaymentUINonceResult:paymentMethodNonce];
+        
+        NSMutableDictionary *mdictionary = [dictionary mutableCopy];
+        
+        NSString* deviceData = [self.dataCollector collectCardFraudData];
+        [mdictionary setValue:deviceData forKey:@"deviceData"];
 
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                                      messageAsDictionary:dictionary];
+                                                      messageAsDictionary:mdictionary];
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:dropInUIcallbackId];
         dropInUIcallbackId = nil;
